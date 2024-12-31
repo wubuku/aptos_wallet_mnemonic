@@ -1,7 +1,7 @@
 import sys
+import os
 from aiohttp import Payload
 from mnemonic import Mnemonic
-
 from utils import PublicKeyUtils
 from aptos_sdk.account import Account
 from aptos_sdk.client import FaucetClient, RestClient
@@ -67,8 +67,33 @@ NODE_URL = 'https://fullnode.devnet.aptoslabs.com/v1' #'https://fullnode.testnet
 
 # rest_client.close()
 
+
+# Define the root directory for storing account information
+ACCOUNTS_DIR = "aptos_accounts"
+
+# Define YAML config file template - this is just a text template
+CONFIG_TEMPLATE = """---
+profiles:
+  default:
+    network: Testnet
+    private_key: "0x{PRIVATE_KEY}"
+    public_key: "0x{PUBLIC_KEY}"
+    account: {ACCOUNT}
+    rest_url: "https://fullnode.testnet.aptoslabs.com"
+    faucet_url: "https://faucet.testnet.aptoslabs.com"
+"""
+
+# Create root directory
+os.makedirs(ACCOUNTS_DIR, exist_ok=True)
+
+# Generate mnemonic words
 words = Mnemonic('english').generate()
 print(words)
+
+# Save mnemonic to file
+mnemonic_file = os.path.join(ACCOUNTS_DIR, 'aptos_mnemonic.txt')
+with open(mnemonic_file, 'w') as f:
+    f.write(words)
 
 for address_index in range(10):
     # Derivation from BIP44 derivation path
@@ -76,3 +101,27 @@ for address_index in range(10):
     pt = PublicKeyUtils(words, path)
     apt_account = Account.load_key(pt.private_key.hex())
     print(f"({address_index}) {path} {apt_account.address()} 0x{pt.private_key.hex()}")
+    
+    # Create account directory structure
+    account_dir = os.path.join(ACCOUNTS_DIR, str(apt_account.address()))
+    aptos_config_dir = os.path.join(account_dir, '.aptos')
+    config_file = os.path.join(aptos_config_dir, 'config.yaml')
+    
+    # Skip if config file already exists
+    if os.path.exists(config_file):
+        continue
+        
+    # Create necessary directories
+    os.makedirs(aptos_config_dir, exist_ok=True)
+    
+    # Prepare config file content
+    config_content = CONFIG_TEMPLATE.format(
+        PRIVATE_KEY=pt.private_key.hex(),
+        PUBLIC_KEY=str(apt_account.public_key()).replace('0x', ''),
+        ACCOUNT=str(apt_account.address()).replace('0x', '')
+    )
+    
+    # Write config file
+    with open(config_file, 'w') as f:
+        f.write(config_content)
+    
