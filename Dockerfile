@@ -2,7 +2,7 @@ FROM ubuntu:22.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/opt/aptos:${PATH}"
+ENV PATH="/opt/aptos:/app/bin:${PATH}"
 
 # Install common development tools and dependencies
 RUN apt-get update && \
@@ -20,6 +20,7 @@ RUN apt-get update && \
     python3 \
     python3-pip \
     python3-venv \
+    python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Poetry for Python dependency management
@@ -47,6 +48,7 @@ RUN mkdir -p /etc/apt/keyrings && \
 
 # Verify installations
 RUN python3 --version && \
+    python --version && \
     poetry --version && \
     node --version && \
     npm --version && \
@@ -58,9 +60,21 @@ WORKDIR /app
 # Copy project files
 COPY . /app/
 
-# Install Python dependencies
+# Install Python dependencies and build the .pyz executable
 RUN poetry config virtualenvs.create false && \
-    poetry install --no-interaction
+    poetry install --no-interaction && \
+    poetry add shiv --dev && \
+    mkdir -p /app/bin && \
+    poetry run shiv -c aptos_wallet_mnemonic -o /app/bin/aptos_wallet_mnemonic .
+
+
+# Make the .pyz file executable
+RUN chmod +x /app/bin/aptos_wallet_mnemonic
+
+# Make the .pyz file executable and create symlink without .pyz extension
+# RUN chmod +x /app/bin/aptos_wallet_mnemonic && \
+#     ln -s /app/bin/aptos_wallet_mnemonic /app/bin/wallet
+
 
 # Expose port for potential future Node.js service
 EXPOSE 3000
