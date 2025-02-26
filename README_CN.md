@@ -73,6 +73,118 @@ poetry run python aptos_wallet_mnemonic.py
 3. 代码中的 import 语句应该与 `pyproject.toml` 中的依赖保持一致
 
 
+
+## 项目打包与分发
+
+本项目可以通过多种方式打包分发，以便在不同环境中使用。
+
+### 打包方式比较
+
+| 方式 | 目标机器需要Python | 包含依赖 | 离线运行 | 文件大小 | 启动速度 | 适用场景 |
+|-----|----------------|----------|---------|--------|---------|---------|
+| Wheel包 | ✅ 需要 | ❌ 不包含 | ❌ 需联网 | 小 | 快 | 开发环境、有网络连接 |
+| Shiv | ✅ 需要 | ✅ 包含 | ✅ 支持 | 中等 | 快 | 有Python的离线环境 |
+| PyInstaller | ❌ 不需要 | ✅ 包含 | ✅ 支持 | 大 | 慢 | 完全独立的可执行文件 |
+| Nuitka | ❌ 不需要 | ✅ 包含 | ✅ 支持 | 大 | 快 | 追求性能的场景 |
+
+### 1. 创建Wheel包
+
+生成标准Python包，适合在有网络连接的环境中使用：
+
+```bash
+# 构建wheel包
+poetry build
+
+# 构建结果位于dist/目录下
+# 例如：dist/aptos_wallet_mnemonic-0.2.0-py3-none-any.whl
+```
+
+目标机器上安装方法：
+
+```bash
+pip install aptos_wallet_mnemonic-0.2.0-py3-none-any.whl
+```
+
+**注意**：安装wheel包时，pip会自动从PyPI下载并安装所有依赖项。wheel包**不包含**依赖代码。
+
+### 2. 使用Shiv打包（推荐用于离线环境）
+
+如果目标机器已安装Python但不希望联网下载依赖，Shiv是理想选择：
+
+```bash
+# 安装shiv
+poetry add shiv --dev
+
+# 打包应用及其所有依赖到单个.pyz文件
+poetry run shiv -c aptos_wallet_mnemonic -o aptos_wallet.pyz .
+```
+
+目标机器上使用方法：
+
+```bash
+# 直接运行（如果有执行权限）
+./aptos_wallet.pyz
+
+# 或通过Python解释器运行
+python aptos_wallet.pyz
+```
+
+**优势**：包含所有依赖，无需联网安装，文件大小适中，启动快速。
+
+### 3. 使用PyInstaller创建独立可执行文件
+
+生成完全独立的可执行文件，目标机器无需安装Python：
+
+```bash
+# 安装PyInstaller
+poetry add pyinstaller --dev
+
+# 打包应用
+poetry run pyinstaller --onefile aptos_wallet_mnemonic.py
+```
+
+打包结果位于`dist/`目录下，可以直接在目标机器上运行，无需任何依赖。
+
+**注意**：生成的文件体积较大，包含完整的Python运行环境。
+
+### 4. 使用Nuitka编译为本地代码
+
+将Python代码编译为C并生成本地可执行文件，性能更好：
+
+```bash
+# 安装Nuitka
+poetry add nuitka --dev
+
+# 编译应用
+poetry run python -m nuitka --follow-imports aptos_wallet_mnemonic.py
+```
+
+**优势**：运行速度快，保护源代码，无需Python环境。
+
+### 5. 导出依赖列表
+
+如果只需要导出项目依赖：
+
+```bash
+# 导出为requirements.txt
+poetry export -f requirements.txt > requirements.txt
+```
+
+目标机器上安装依赖：
+
+```bash
+pip install -r requirements.txt
+```
+
+### 推荐分发方案
+
+1. **开发环境**：使用`poetry build`创建wheel包
+2. **有Python的离线环境**：使用`shiv`创建独立的`.pyz`文件（最佳平衡方案）
+3. **完全独立部署**：使用`PyInstaller`或`Nuitka`创建独立可执行文件
+
+根据目标环境选择合适的打包方式，可以大大简化部署和使用过程。
+
+
 ## AI 生成的 Go 版本（待验证）
 
 可以通过以下方式测试验证：
