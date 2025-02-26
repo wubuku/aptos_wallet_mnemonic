@@ -185,6 +185,24 @@ pip install -r requirements.txt
 根据目标环境选择合适的打包方式，可以大大简化部署和使用过程。
 
 
+## 使用 Docker 构建和运行
+
+### 构建 Docker 镜像
+docker build -t aptos-wallet-env .
+
+### 运行容器
+```bash
+# 交互式 shell
+docker run -it --rm aptos-wallet-env
+
+# 运行特定 Python 脚本
+docker run -it --rm aptos-wallet-env python3 aptos_wallet_mnemonic.py
+
+# 端口映射（未来 Node.js 服务）
+docker run -it --rm -p 3000:3000 aptos-wallet-env
+```
+
+
 ## AI 生成的 Go 版本（待验证）
 
 可以通过以下方式测试验证：
