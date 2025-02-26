@@ -60,21 +60,16 @@ WORKDIR /app
 # Copy project files
 COPY . /app/
 
-# Install Python dependencies and build the .pyz executable
+# Install Python dependencies
 RUN poetry config virtualenvs.create false && \
     poetry install --no-interaction && \
     poetry add shiv --dev && \
-    mkdir -p /app/bin && \
-    poetry run shiv -c aptos_wallet_mnemonic -o /app/bin/aptos_wallet_mnemonic .
+    mkdir -p /app/bin
 
-
-# Make the .pyz file executable
-RUN chmod +x /app/bin/aptos_wallet_mnemonic
-
-# Make the .pyz file executable and create symlink without .pyz extension
-# RUN chmod +x /app/bin/aptos_wallet_mnemonic && \
-#     ln -s /app/bin/aptos_wallet_mnemonic /app/bin/wallet
-
+# Create a simple shell script to run the Python script directly
+# This ensures we have a working command even if Shiv packaging fails
+RUN echo '#!/bin/bash\npython3 /app/aptos_wallet_mnemonic.py "$@"' > /app/bin/aptos_wallet_mnemonic && \
+    chmod +x /app/bin/aptos_wallet_mnemonic
 
 # Expose port for potential future Node.js service
 EXPOSE 3000

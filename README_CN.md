@@ -203,7 +203,6 @@ docker run -it --rm aptos-wallet-env python3 aptos_wallet_mnemonic.py
 docker run -it --rm -p 3000:3000 aptos-wallet-env
 ```
 
-如果选择参考上文，已经将 aptos_wallet_mnemonic 项目打包为命令，添加到 Docker 容器中，那么可以：
 
 ```bash
 # Run the container interactively
@@ -211,9 +210,6 @@ docker run -it --rm aptos-wallet-env
 
 # Inside the container, you can directly run:
 aptos_wallet_mnemonic
-
-# # Or use the shorter alias, if you have created a symlink:
-# wallet
 
 # Or run the command directly from Docker:
 docker run -it --rm aptos-wallet-env aptos_wallet_mnemonic
