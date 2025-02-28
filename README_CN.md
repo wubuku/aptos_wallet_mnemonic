@@ -215,6 +215,44 @@ aptos_wallet_mnemonic
 docker run -it --rm aptos-wallet-env aptos_wallet_mnemonic
 ```
 
+## 在开发环境中工作
+
+另外，在开发环境中工作，可以创建一个简单的包装脚本：
+
+```bash
+mkdir -p ~/bin && cat > ~/bin/aptos_wallet_mnemonic << 'EOF'
+#!/bin/bash
+
+# 项目目录路径 - 替换为实际路径
+PROJECT_DIR="/path/to/your/project"
+
+# 进入项目目录
+cd "$PROJECT_DIR"
+
+# 使用 Poetry 运行脚本，并传递所有参数
+poetry run python aptos_wallet_mnemonic.py "$@"
+
+# 如果遇到错误，打印帮助信息
+if [ $? -ne 0 ]; then
+  echo "Error running script. Make sure Poetry is installed and dependencies are set up."
+  echo "You can install dependencies with: cd $PROJECT_DIR && poetry install"
+fi
+EOF
+
+# 添加执行权限
+chmod +x ~/bin/aptos_wallet_mnemonic
+
+# 确保 ~/bin 在 PATH 中
+if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
+  echo 'export PATH="$HOME/bin:$PATH"' >> ~/.zshrc
+  echo "Added ~/bin to PATH in ~/.zshrc. Run 'source ~/.zshrc' to apply changes."
+else
+  echo "~/bin is already in your PATH."
+fi
+```
+
+替换`/path/to/your/project/`为您实际的项目路径。
+
 
 ## AI 生成的 Go 版本（待验证）
 
